@@ -36,11 +36,12 @@ async function getAvailableDeanSlots(deanId) {
   const today = new Date();
   const nextTwoMonths = new Date(today);
   nextTwoMonths.setMonth(today.getMonth() + 2);
+  const dean = await Dean.findById(deanId);
 
-  const bookedSessions = await Session.find({
-    dean: deanId,
-    startDateTime: { $gte: today, $lt: nextTwoMonths },
-  });
+  const bookedSessions = await dean.sessions.filter(
+    (session) =>
+      session.startDateTime >= today && session.startDateTime < nextTwoMonths
+  );
 
   const availableSlots = [];
   const currentDate = new Date(today);
@@ -76,7 +77,10 @@ async function getAvailableDeanSlots(deanId) {
 
 const getPendingSessions = async (req, res) => {
   const deanId = req.user._id;
-  const sessions = await Session.find({ dean: deanId, completed: false });
+  const dean = await Dean.findById(deanId);
+  const sessions = dean.sessions.filter(
+    (session) => session.completed === false
+  );
   res.status(200).json(sessions);
 };
 export default { login, availableSlots, getPendingSessions };
